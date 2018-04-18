@@ -273,6 +273,17 @@ AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
 #endif
 ]])], [win32=no], [win32=yes])
 
+AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
+#if defined __EMSCRIPTEN__
+#error EMSCRIPTEN
+#endif
+]])], [emscripten=no], [emscripten=yes])
+
+if test "$emscripten" = yes ; then
+  AM_CXXFLAGS="$AM_CXXFLAGS -Oz -s USE_ZLIB=1"
+  AC_MSG_RESULT([Detected emscripten])
+fi
+
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
 #ifdef _MSC_VER
 #error MSVC
@@ -868,6 +879,11 @@ case $host_os in
     default_enable_backend_remote=no
     ;;
 esac
+
+if test "$emscripten" = yes ; then
+  AC_MSG_RESULT([Remote backend disabled with emscripten])
+  default_enable_backend_remote=no
+fi
 XAPIAN_BACKEND_ENABLE([remote], [$default_enable_backend_remote], [yes (except for MSDOS; unless --disable-gpl-libxapian)])
 
 win32_need_lws2_32=0

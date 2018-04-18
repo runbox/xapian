@@ -295,7 +295,20 @@ GlassVersion::write(glass_revision_number_t new_rev, int flags)
 	else
 	    tmpfile += "/v.tmp";
 
-	fd = posixy_open(tmpfile.c_str(), O_CREAT|O_TRUNC|O_WRONLY|O_BINARY, 0666);
+#ifdef __EMSCRIPTEN__
+        /*
+        * Emscripten crashes if using O_TRUNC here,
+        * so unlink and create a new file instead
+        */
+		unlink(tmpfile.c_str());
+		fd = posixy_open(tmpfile.c_str(),
+				O_CREAT|O_WRONLY|O_BINARY, 0666);
+#else
+		fd = posixy_open(tmpfile.c_str(),
+				O_CREAT|O_TRUNC|O_WRONLY|O_BINARY,
+				0666);
+#endif
+
 	if (rare(fd < 0))
 	    throw Xapian::DatabaseOpeningError("Couldn't write new rev file: " + tmpfile,
 					       errno);
